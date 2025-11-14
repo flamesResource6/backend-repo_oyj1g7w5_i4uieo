@@ -12,9 +12,7 @@ Model name is converted to lowercase for the collection name:
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional
-
-# Example schemas (replace with your own):
+from typing import Optional, List
 
 class User(BaseModel):
     """
@@ -36,13 +34,24 @@ class Product(BaseModel):
     description: Optional[str] = Field(None, description="Product description")
     price: float = Field(..., ge=0, description="Price in dollars")
     category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+    stock: int = Field(0, ge=0, description="Units available in inventory")
+    image_url: Optional[str] = Field(None, description="Image URL for the product")
+    in_stock: bool = Field(True, description="Whether product is generally available")
 
-# Add your own schemas here:
-# --------------------------------------------------
+class OrderItem(BaseModel):
+    product_id: str = Field(..., description="Referenced product _id as string")
+    title: str = Field(..., description="Snapshot of product title at purchase time")
+    price: float = Field(..., ge=0, description="Unit price at purchase time")
+    quantity: int = Field(..., ge=1, description="Quantity purchased")
+    subtotal: float = Field(..., ge=0, description="price * quantity")
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class Order(BaseModel):
+    """
+    Orders collection schema
+    Collection name: "order"
+    """
+    buyer_name: Optional[str] = Field(None, description="Buyer name")
+    buyer_email: Optional[str] = Field(None, description="Buyer email")
+    items: List[OrderItem] = Field(default_factory=list, description="Purchased items")
+    total: float = Field(..., ge=0, description="Order total amount")
+    status: str = Field("paid", description="Order status")
