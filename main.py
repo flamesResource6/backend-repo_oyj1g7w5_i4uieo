@@ -48,6 +48,16 @@ def list_products(q: Optional[str] = None, category: Optional[str] = None):
     docs = db["product"].find(filt).sort("created_at", -1)
     return [to_serializable(d) for d in docs]
 
+@app.get("/categories")
+def list_categories():
+    try:
+        cats = db["product"].distinct("category")
+        cats = [c for c in cats if c is not None and str(c).strip() != ""]
+        cats = sorted(set(cats), key=lambda x: str(x).lower())
+        return cats
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch categories: {str(e)[:80]}")
+
 class CartItem(BaseModel):
     product_id: str
     quantity: int
